@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gabriel1305rocha/Goal-Sales-Analyzer/controllers"
+	"github.com/gabriel1305rocha/Goal-Sales-Analyzer/models"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -32,10 +33,18 @@ func main() {
 		log.Fatalf("failed to connect to the database: %v", err)
 	}
 
+	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.Sales{})
+
+	// Configurando as rotas
 	http.HandleFunc("/HelloWorld", func(w http.ResponseWriter, r *http.Request) {
 		controller.HelloWorld(db, w, r)
+	})
+	http.HandleFunc("/create_user", func(w http.ResponseWriter, r *http.Request) {
+		controller.CreateUser(db, w, r)
 	})
 
 	log.Println("Server running on http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
 }
+
