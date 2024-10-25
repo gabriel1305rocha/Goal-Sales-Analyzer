@@ -23,7 +23,7 @@ jobs:
         path: |
           ~/.cache/go-build
           ~/.go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('./srv/go.mod') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('srv/go.mod') }}
         restore-keys: |
           ${{ runner.os }}-go-
 
@@ -32,7 +32,9 @@ jobs:
       working-directory: ./srv
 
     - name: Run linter
-      run: go get -u github.com/golangci/golangci-lint/cmd/golangci-lint && golangci-lint run
+      run: |
+        go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+        golangci-lint run
       working-directory: ./srv
 
     - name: Build
@@ -47,4 +49,4 @@ jobs:
       run: |
         go test -coverprofile=coverage.out ./...
         go tool cover -html=coverage.out -o coverage.html
-      working-directory: ./srv 
+      working-directory: ./srv
