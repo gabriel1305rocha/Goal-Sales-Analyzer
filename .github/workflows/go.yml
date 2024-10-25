@@ -23,7 +23,7 @@ jobs:
         path: |
           ~/.cache/go-build
           ~/.go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.mod') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('./srv/go.mod') }}
         restore-keys: |
           ${{ runner.os }}-go-
 
@@ -47,4 +47,4 @@ jobs:
       run: |
         go test -coverprofile=coverage.out ./...
         go tool cover -html=coverage.out -o coverage.html
-      working-directory: /srv
+      working-directory: ./srv 
