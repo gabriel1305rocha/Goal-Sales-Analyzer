@@ -1,6 +1,6 @@
 module github.com/gabriel1305rocha/Goal-Sales-Analyzer
 
-go 1.23.2
+go 1.23
 
 require (
 	gorm.io/driver/postgres v1.5.9
