@@ -27,6 +27,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Clean up
+        run: go clean -modcache
+        working-directory: ${{ github.workspace }}/srv
+
       - name: Install dependencies
         run: |
           echo "Current directory:"
@@ -35,14 +39,37 @@ jobs:
           go mod tidy
         working-directory: ${{ github.workspace }}/srv
 
+  lint:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+      - name: Cache golangci-lint
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/golangci-lint
+          key: ${{ runner.os }}-golangci-lint-${{ hashFiles('srv/go.mod') }}
+          restore-keys: |
+            ${{ runner.os }}-golangci-lint-
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
       - name: Run linter
-        run: go get -u github.com/golangci/golangci-lint/cmd/golangci-lint && golangci-lint run
+        run: golangci-lint run
         working-directory: ${{ github.workspace }}/srv
 
-      - name: Build
-        run: go build -v ./...
-        working-directory: ${{ github.workspace }}/srv
-
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
       - name: Test
         run: go test -v ./...
         working-directory: ${{ github.workspace }}/srv
