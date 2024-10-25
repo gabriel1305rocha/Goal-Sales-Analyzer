@@ -1,14 +1,14 @@
 module github.com/gabriel1305rocha/Goal-Sales-Analyzer
 
-go 1.23.2
+go 1.23
 
 require (
+	github.com/astaxie/beego v1.12.3
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.12
 )
 
 require (
-	github.com/astaxie/beego v1.12.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
