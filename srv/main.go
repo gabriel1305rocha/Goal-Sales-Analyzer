@@ -1,50 +1,75 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/gabriel1305rocha/Goal-Sales-Analyzer/controllers"
+	"github.com/astaxie/beego"
 	"github.com/gabriel1305rocha/Goal-Sales-Analyzer/models"
+	"github.com/gabriel1305rocha/Goal-Sales-Analyzer/routers"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func main() {
+type Config struct {
+	Host     string
+	User     string
+	Password string
+	DbName   string
+	Port     string
+	SslMode  string
+}
+
+func loadConfig() (*Config, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		return nil, fmt.Errorf("error loading .env file: %w", err)
 	}
 
-	dbHost := os.Getenv("DB_HOST")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-	dbPort := os.Getenv("DB_PORT")
-	dbSslMode := os.Getenv("DB_SSLMODE")
+	config := &Config{
+		Host:     getEnv("DB_HOST"),
+		User:     getEnv("DB_USER"),
+		Password: getEnv("DB_PASSWORD"),
+		DbName:   getEnv("DB_NAME"),
+		Port:     getEnv("DB_PORT"),
+		SslMode:  getEnv("DB_SSLMODE"),
+	}
 
-	dsn := "host=" + dbHost + " user=" + dbUser + " password=" + dbPassword +
-		" dbname=" + dbName + " port=" + dbPort + " sslmode=" + dbSslMode
+	return config, nil
+}
+
+func getEnv(key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		log.Fatalf("environment variable %s is not set", key)
+	}
+	return value
+}
+
+func initDB() {
+	config, err := loadConfig()
+	if err != nil {
+		log.Fatalf("configuration error: %v", err)
+	}
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		config.Host, config.User, config.Password, config.DbName, config.Port, config.SslMode)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect to the database: %v", err)
 	}
 
-	db.AutoMigrate(&models.User{})
-	db.AutoMigrate(&models.Sales{})
-
-	// Configurando as rotas
-	http.HandleFunc("/HelloWorld", func(w http.ResponseWriter, r *http.Request) {
-		controller.HelloWorld(db, w, r)
-	})
-	http.HandleFunc("/create_user", func(w http.ResponseWriter, r *http.Request) {
-		controller.CreateUser(db, w, r)
-	})
-
-	log.Println("Server running on http://localhost:8080")
-	http.ListenAndServe(":8080", nil)
+	models.Db = db
+	if err := db.AutoMigrate(&models.User{}, &models.Sales{}); err != nil {
+		log.Fatalf("failed to migrate database: %v", err)
+	}
 }
 
+func main() {
+	initDB()
+	routers.Init()
+	beego.Run()
+}
